@@ -22,6 +22,7 @@ import { RegisterPage } from '@/app/auth/RegisterPage';
 import { PublicProjectsPage } from '@/app/projects/PublicProjectsPage';
 import { ProjectRequestsPage } from '@/app/admin/ProjectRequestsPage';
 import { CreatePMPage } from '@/app/admin/CreatePMPage';
+import { SettingsPage } from '@/app/settings/SettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,9 +78,11 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
+              <Route path="/settings" element={<SettingsPage />} />
+
               {/* Admin only */}
               <Route
-                path="/admin"
+                path="/admin/analytics"
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminPage />

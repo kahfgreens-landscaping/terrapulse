@@ -15,11 +15,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const DEFAULT_PHASES: Omit<ProjectPhase, 'id'>[] = [
-  { name: 'Consultation & Site Survey', status: 'completed', notes: 'Initial site review and client brief confirmed.' },
-  { name: '3D Landscape Design & Client Approval', status: 'active', notes: 'Preparing 3D renders and material palette.' },
-  { name: 'Permits & Material Procurement', status: 'pending', notes: 'Permit applications and nursery selection.' },
-  { name: 'Groundwork & Hardscaping', status: 'pending', notes: 'Earthmoving, irrigation lines, and masonry.' },
-  { name: 'Planting & Final Handover', status: 'pending', notes: 'Plant installation, lighting setup, and walkthrough.' },
+  { name: 'Mobilization', status: 'pending', notes: '', estimatedDays: 7, order: 1 },
+  { name: 'Site Preparation', status: 'pending', notes: '', estimatedDays: 5, order: 2 },
+  { name: 'Planting & Irrigation', status: 'pending', notes: '', estimatedDays: 14, order: 3 },
+  { name: 'Hardscaping', status: 'pending', notes: '', estimatedDays: 10, order: 4 },
+  { name: 'Final Inspection', status: 'pending', notes: '', estimatedDays: 3, order: 5 },
+  { name: 'Handover', status: 'pending', notes: '', estimatedDays: 2, order: 6 },
 ];
 
 export function ProjectRequestsPage() {
@@ -100,7 +101,7 @@ export function ProjectRequestsPage() {
         pmEmail: assignedPm ? assignedPm.email : '',
         pmPhone: assignedPm?.phone || '',
         crewIds: [],
-        status: 'design',
+        status: 'inquiry',
         phases,
         address: acceptingReq.propertyAddress,
         budget: 0, // Admin can update this via Edit Project modal

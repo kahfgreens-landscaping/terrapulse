@@ -29,12 +29,17 @@ import {
 } from '@/lib/utils';
 import type {
   Project, ProjectStatus, ProjectPhase, ProjectPhoto,
-  Message, Design, Invoice, Document as DocType, PhotoType, User as UserType
+  Message, Design, Invoice, Document as DocType, PhotoType, User as UserType,
+  Proposal, PaymentProof
 } from '@/types';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
+import { BOQModal } from '@/components/projects/BOQModal';
+import { ChangePMModal } from '@/components/projects/ChangePMModal';
+import { ManagePhasesModal } from '@/components/projects/ManagePhasesModal';
+import { ProposalTabContent } from '@/components/projects/ProposalTabContent';
 import { v4 as uuidv4 } from 'uuid';
 
-type TabKey = 'timeline' | 'gallery' | 'messages' | 'designs' | 'documents';
+type TabKey = 'proposal' | 'timeline' | 'gallery' | 'messages' | 'designs' | 'documents';
 
 // Helper image compressor
 function compressImage(file: File, maxWidth = 1600, quality = 0.85): Promise<{ blob: Blob; dataUrl: string }> {
@@ -75,9 +80,12 @@ export function ProjectDetailPage() {
   const { user } = useAuth();
   const { data: project, loading } = useDocument<Project>(`projects/${id}`);
 
-  const [activeTab, setActiveTab] = useState<TabKey>('timeline');
+  const [activeTab, setActiveTab] = useState<TabKey>('proposal');
   const [updating, setUpdating] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBOQModalOpen, setIsBOQModalOpen] = useState(false);
+  const [isChangePMModalOpen, setIsChangePMModalOpen] = useState(false);
+  const [isManagePhasesModalOpen, setIsManagePhasesModalOpen] = useState(false);
 
   // PM and Client loaded details
   const [pmUser, setPmUser] = useState<UserType | null>(null);
@@ -105,6 +113,18 @@ export function ProjectDetailPage() {
   // In-Project Invoices query
   const { data: invoices } = useCollection<Invoice>(
     'invoices',
+    where('projectId', '==', id ?? '')
+  );
+
+  // Proposals
+  const { data: proposals } = useCollection<Proposal>(
+    'proposals',
+    where('projectId', '==', id ?? '')
+  );
+  
+  // Payment Proofs
+  const { data: paymentProofs } = useCollection<PaymentProof>(
+    'paymentProofs',
     where('projectId', '==', id ?? '')
   );
 
@@ -498,7 +518,7 @@ export function ProjectDetailPage() {
                     </span>
                     {user?.role === 'admin' && (
                       <button
-                        onClick={() => setIsEditModalOpen(true)}
+                        onClick={() => setIsChangePMModalOpen(true)}
                         className="text-[11px] text-muted-foreground hover:text-primary-600 transition-colors"
                       >
                         Change PM
@@ -581,6 +601,7 @@ export function ProjectDetailPage() {
       {/* Main Tabbed Project Workspace Navigation */}
       <div className="flex gap-2 border-b border-border mb-6 overflow-x-auto pb-2">
         {[
+          { key: 'proposal', label: 'Proposal & BOQ', icon: FileText, badge: proposals.length },
           { key: 'timeline', label: 'Workflow & Milestones', icon: CheckCircle2, badge: `${progress}%` },
           { key: 'gallery', label: 'Before, During & After Photos', icon: Camera, badge: projectPhotos.length },
           { key: 'messages', label: 'Project Communication Hub', icon: MessageCircle, badge: messages.length },
@@ -611,6 +632,18 @@ export function ProjectDetailPage() {
         ))}
       </div>
 
+      {/* TAB 0: PROPOSAL */}
+      {activeTab === 'proposal' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <ProposalTabContent
+            project={project}
+            proposals={proposals}
+            paymentProofs={paymentProofs}
+            onOpenBOQModal={() => setIsBOQModalOpen(true)}
+          />
+        </motion.div>
+      )}
+
       {/* TAB 1: WORKFLOW & MILESTONES */}
       {activeTab === 'timeline' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -623,9 +656,16 @@ export function ProjectDetailPage() {
                     Track the lifecycle from survey through 3D design, permits, hardscaping, and planting handover.
                   </p>
                 </div>
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-primary-600">{progress}%</span>
-                  <p className="text-[10px] text-muted-foreground uppercase font-semibold">Total Handover</p>
+                <div className="flex items-center gap-4 text-right">
+                  {user?.role === 'admin' && (
+                    <Button size="sm" variant="outline" onClick={() => setIsManagePhasesModalOpen(true)} className="text-xs h-8">
+                      Manage Phases
+                    </Button>
+                  )}
+                  <div>
+                    <span className="text-2xl font-bold text-primary-600">{progress}%</span>
+                    <p className="text-[10px] text-muted-foreground uppercase font-semibold">Total Handover</p>
+                  </div>
                 </div>
               </div>
               <Progress value={progress} className="h-2 mt-3" />
@@ -1135,6 +1175,24 @@ export function ProjectDetailPage() {
         project={project}
         onClose={() => setIsEditModalOpen(false)}
       />
+
+      {isBOQModalOpen && (
+        <BOQModal 
+          projectId={project.id} 
+          clientId={project.clientId}
+          clientName={project.clientName || 'Client'}
+          existingProposal={proposals[0]} 
+          onClose={() => setIsBOQModalOpen(false)} 
+        />
+      )}
+      
+      {isChangePMModalOpen && (
+        <ChangePMModal project={project} onClose={() => setIsChangePMModalOpen(false)} />
+      )}
+      
+      {isManagePhasesModalOpen && (
+        <ManagePhasesModal project={project} onClose={() => setIsManagePhasesModalOpen(false)} />
+      )}
     </div>
   );
 }

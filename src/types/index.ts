@@ -20,6 +20,10 @@ export interface User {
 
 export type ProjectStatus =
   | 'inquiry'
+  | 'proposal_sent'
+  | 'revision_requested'
+  | 'awaiting_payment'
+  | 'mobilization'
   | 'design'
   | 'approval'
   | 'scheduled'
@@ -30,11 +34,68 @@ export type ProjectStatus =
 export interface ProjectPhase {
   id: string;
   name: string;
+  description?: string;
   status: 'pending' | 'active' | 'completed';
   startDate?: string;
   endDate?: string;
-  estimatedEndDate?: string;
+  estimatedDays?: number;
   notes?: string;
+  order: number;
+}
+
+export interface BOQItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  total: number;
+  notes?: string;
+}
+
+export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'revision_requested' | 'rejected';
+
+export interface Proposal {
+  id: string;
+  projectId: string;
+  projectRequestId?: string;
+  clientId: string;
+  clientName: string;
+  items: BOQItem[];
+  subtotal: number;
+  vatPercent: number;
+  vatAmount: number;
+  totalAmount: number;
+  advancePercent: number;
+  advanceAmount: number;
+  notes?: string;
+  validUntil: string;
+  status: ProposalStatus;
+  revisionNotes?: string;
+  revisionCount: number;
+  sentAt?: string;
+  respondedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PaymentStatus = 'pending_review' | 'confirmed' | 'rejected';
+
+export interface PaymentProof {
+  id: string;
+  projectId: string;
+  proposalId: string;
+  clientId: string;
+  amount: number;
+  paymentType: 'advance' | 'milestone' | 'final';
+  proofUrl: string;
+  proofFileName: string;
+  status: PaymentStatus;
+  notes?: string;
+  adminNotes?: string;
+  createdAt: string;
+  confirmedAt?: string;
+  confirmedBy?: string;
 }
 
 export interface Project {
@@ -193,7 +254,7 @@ export interface Notification {
   userId: string;
   title: string;
   body: string;
-  type: 'project_assigned' | 'message' | 'design' | 'invoice' | 'milestone' | 'crew' | 'system';
+  type: 'project_assigned' | 'message' | 'design' | 'invoice' | 'milestone' | 'crew' | 'system' | 'proposal' | 'payment';
   projectId?: string;
   read: boolean;
   createdAt: string;

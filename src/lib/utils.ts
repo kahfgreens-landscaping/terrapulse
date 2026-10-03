@@ -65,7 +65,11 @@ export function statusColor(status: string): string {
   const map: Record<string, string> = {
     // Project statuses
     inquiry: 'bg-blue-100 text-blue-700',
-    design: 'bg-purple-100 text-purple-700',
+    proposal_sent: 'bg-indigo-100 text-indigo-700',
+    revision_requested: 'bg-orange-100 text-orange-700',
+    awaiting_payment: 'bg-amber-100 text-amber-700',
+    mobilization: 'bg-purple-100 text-purple-700',
+    design: 'bg-pink-100 text-pink-700',
     approval: 'bg-yellow-100 text-yellow-700',
     scheduled: 'bg-cyan-100 text-cyan-700',
     in_progress: 'bg-green-100 text-green-700',
@@ -87,10 +91,17 @@ export function statusColor(status: string): string {
 }
 
 export function statusLabel(status: string): string {
-  return status
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  switch (status) {
+    case 'proposal_sent': return 'Proposal Sent';
+    case 'revision_requested': return 'Revision Requested';
+    case 'awaiting_payment': return 'Awaiting Payment';
+    case 'mobilization': return 'Mobilization';
+    default:
+      return status
+        .split('_')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+  }
 }
 
 export function getProjectProgress(phases: { status: string }[]): number {

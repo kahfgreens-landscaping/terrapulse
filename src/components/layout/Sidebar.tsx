@@ -63,7 +63,7 @@ const adminNav: NavItem[] = [
   { label: 'Create PM', to: '/admin/create-pm', icon: UserPlus },
   { label: 'Designs', to: '/designs', icon: Palette },
   { label: 'Messages', to: '/messages', icon: MessageCircle },
-  { label: 'Admin Panel', to: '/admin', icon: BarChart3 },
+  { label: 'Analytics', to: '/admin/analytics', icon: BarChart3 },
   { label: 'Showcase', to: '/showcase', icon: Globe },
 ];
 
