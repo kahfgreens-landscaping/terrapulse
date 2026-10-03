@@ -185,7 +185,7 @@ export function SettingsPage() {
                     className="w-full h-10 px-3 rounded-xl border border-input bg-background"
                   >
                     {Object.values(CURRENCIES).map(c => (
-                      <option key={c.code} value={c.code}>{c.code} - {c.symbol} ({c.name})</option>
+                      <option key={c.code} value={c.code}>{c.code} - {c.symbol}</option>
                     ))}
                   </select>
               </div>
