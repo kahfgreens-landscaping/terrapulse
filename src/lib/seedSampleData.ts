@@ -5,11 +5,11 @@ import type { Project, ProjectPhase } from '@/types';
 
 export async function seedSampleProjects(userId: string) {
   const sample1Phases: ProjectPhase[] = [
-    { id: 'p1', name: 'Design Consultation & 3D Render', status: 'completed', notes: 'Design approved by client.' },
-    { id: 'p2', name: 'Permits & Underground Utilities Check', status: 'completed', notes: 'Call-before-you-dig complete.' },
-    { id: 'p3', name: 'Paver Patio & Outdoor Kitchen', status: 'active', notes: 'Laying natural bluestone pavers.' },
-    { id: 'p4', name: 'Planting, Sod & Irrigation', status: 'pending', notes: 'Boxwoods, hydrangeas, and drip system.' },
-    { id: 'p5', name: 'Low-Voltage Lighting & Handover', status: 'pending', notes: 'Pathway lights and final walkthrough.' },
+    { id: 'p1', name: 'Design Consultation & 3D Render', status: 'completed', notes: 'Design approved by client.', estimatedDays: 5, order: 1 },
+    { id: 'p2', name: 'Permits & Underground Utilities Check', status: 'completed', notes: 'Call-before-you-dig complete.', estimatedDays: 3, order: 2 },
+    { id: 'p3', name: 'Paver Patio & Outdoor Kitchen', status: 'active', notes: 'Laying natural bluestone pavers.', estimatedDays: 14, order: 3 },
+    { id: 'p4', name: 'Planting, Sod & Irrigation', status: 'pending', notes: 'Boxwoods, hydrangeas, and drip system.', estimatedDays: 7, order: 4 },
+    { id: 'p5', name: 'Low-Voltage Lighting & Handover', status: 'pending', notes: 'Pathway lights and final walkthrough.', estimatedDays: 3, order: 5 },
   ];
 
   const project1Ref = await addDoc(collection(db, 'projects'), {
@@ -31,10 +31,10 @@ export async function seedSampleProjects(userId: string) {
   });
 
   const sample2Phases: ProjectPhase[] = [
-    { id: 'p1', name: 'Site Evaluation & Soil Analysis', status: 'completed', notes: 'Soil salinity and drainage checked.' },
-    { id: 'p2', name: '3D Mockup & Lighting Scheme Approval', status: 'active', notes: 'Draft v2 sent to homeowner.' },
-    { id: 'p3', name: 'Retaining Wall & Drainage', status: 'pending', notes: 'Structural block and weeping tile installation.' },
-    { id: 'p4', name: 'Desert Flora & Olive Trees', status: 'pending', notes: 'Specimen olive tree focal point.' },
+    { id: 'p1', name: 'Site Evaluation & Soil Analysis', status: 'completed', notes: 'Soil salinity and drainage checked.', estimatedDays: 2, order: 1 },
+    { id: 'p2', name: '3D Mockup & Lighting Scheme Approval', status: 'active', notes: 'Draft v2 sent to homeowner.', estimatedDays: 7, order: 2 },
+    { id: 'p3', name: 'Retaining Wall & Drainage', status: 'pending', notes: 'Structural block and weeping tile installation.', estimatedDays: 10, order: 3 },
+    { id: 'p4', name: 'Desert Flora & Olive Trees', status: 'pending', notes: 'Specimen olive tree focal point.', estimatedDays: 5, order: 4 },
   ];
 
   const project2Ref = await addDoc(collection(db, 'projects'), {

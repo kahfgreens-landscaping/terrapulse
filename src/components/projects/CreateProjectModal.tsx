@@ -37,11 +37,11 @@ const PRESET_COVERS = [
 ];
 
 const DEFAULT_PHASES: Omit<ProjectPhase, 'id'>[] = [
-  { name: 'Consultation & Site Survey', status: 'completed', notes: 'Initial site walkthrough completed.' },
-  { name: '3D Design & Client Approval', status: 'active', notes: 'Reviewing 3D render mockups.' },
-  { name: 'Permits & Material Procurement', status: 'pending', notes: 'Sourcing pavers and nursery stock.' },
-  { name: 'Groundwork & Hardscaping', status: 'pending', notes: 'Excavation, grading, and patio build.' },
-  { name: 'Planting & Final Handover', status: 'pending', notes: 'Trees, turf installation, and walkthrough.' },
+  { name: 'Consultation & Site Survey', status: 'completed', notes: 'Initial site walkthrough completed.', estimatedDays: 7, order: 1 },
+  { name: '3D Design & Client Approval', status: 'active', notes: 'Reviewing 3D render mockups.', estimatedDays: 5, order: 2 },
+  { name: 'Permits & Material Procurement', status: 'pending', notes: 'Sourcing pavers and nursery stock.', estimatedDays: 14, order: 3 },
+  { name: 'Groundwork & Hardscaping', status: 'pending', notes: 'Excavation, grading, and patio build.', estimatedDays: 10, order: 4 },
+  { name: 'Planting & Final Handover', status: 'pending', notes: 'Trees, turf installation, and walkthrough.', estimatedDays: 3, order: 5 },
 ];
 
 export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProjectModalProps) {

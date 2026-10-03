@@ -179,15 +179,15 @@ export function SettingsPage() {
             <CardContent className="space-y-4 pt-6">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Currency</label>
-                <select 
-                  value={currency} 
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl border border-input bg-background"
-                >
-                  {CURRENCIES.map(c => (
-                    <option key={c.code} value={c.code}>{c.code} - {c.symbol} ({c.name})</option>
-                  ))}
-                </select>
+                  <select 
+                    value={currency} 
+                    onChange={(e) => setCurrency(e.target.value as any)}
+                    className="w-full h-10 px-3 rounded-xl border border-input bg-background"
+                  >
+                    {Object.values(CURRENCIES).map(c => (
+                      <option key={c.code} value={c.code}>{c.code} - {c.symbol} ({c.name})</option>
+                    ))}
+                  </select>
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Timezone</label>
