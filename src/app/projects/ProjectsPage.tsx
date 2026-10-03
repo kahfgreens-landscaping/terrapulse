@@ -29,14 +29,24 @@ export function ProjectsPage() {
   const [seeding, setSeeding] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // NOTE: Composite Firestore indexes (clientId + orderBy updatedAt) may not exist in all
+  // environments. To avoid silent query failures, we fetch without orderBy for role-based
+  // filters and sort in-memory after loading — this is safe and performant for typical project counts.
   const queryConstraints =
     user?.role === 'client'
-      ? [where('clientId', '==', user.uid), orderBy('updatedAt', 'desc')]
+      ? [where('clientId', '==', user.uid)]
       : user?.role === 'pm'
-      ? [where('pmId', '==', user.uid), orderBy('updatedAt', 'desc')]
+      ? [where('pmId', '==', user.uid)]
       : [orderBy('updatedAt', 'desc')];
 
-  const { data: rawProjects, loading } = useCollection<Project>('projects', ...queryConstraints);
+  const { data: rawProjectsUnsorted, loading } = useCollection<Project>('projects', ...queryConstraints);
+
+  // Sort non-admin results in-memory by updatedAt desc (avoids composite index requirement)
+  const rawProjects = user?.role === 'admin'
+    ? rawProjectsUnsorted
+    : [...rawProjectsUnsorted].sort((a, b) =>
+        new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime()
+      );
 
   // Separate non-deleted and deleted projects
   const nonDeletedProjects = rawProjects.filter((p) => !p.deleted);

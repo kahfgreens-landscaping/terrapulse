@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, addDoc, collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Camera, Home, Building2, TreePine, ChevronRight, ChevronLeft, Check } f
 import { cn } from '@/lib/utils';
 import { useCurrencyStore, CURRENCIES } from '@/store/currency.store';
 import { DirhamSymbol } from '@/components/ui/DirhamSymbol';
+import { useAuthStore } from '@/store/auth.store';
 
 type PropertyType = 'residential' | 'commercial' | 'hoa';
 
@@ -60,6 +61,8 @@ const STEPS = ['Your Info', 'Property', 'Goals', 'Your Project', 'All Set!'];
 export function OnboardingPage() {
   const navigate = useNavigate();
   const { currency } = useCurrencyStore();
+  // Access Zustand auth store to patch user state immediately after onboarding completes
+  const { user: storeUser, setUser } = useAuthStore();
   const currConfig = CURRENCIES[currency] || CURRENCIES.AED;
   const budgetOptions = currency === 'AED'
     ? ['Under 25,000', '25,000 – 60,000', '60,000 – 150,000', '150,000+']
@@ -102,8 +105,8 @@ export function OnboardingPage() {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      // Save user profile
-      await setDoc(doc(db, 'users', user.uid), {
+      // 1. Save complete user profile to Firestore with onboardingComplete: true
+      const userProfile = {
         uid: user.uid,
         email: user.email,
         name: data.name,
@@ -111,15 +114,25 @@ export function OnboardingPage() {
         propertyAddress: data.propertyAddress,
         propertyType: data.propertyType,
         goals: data.goals,
-        role: 'client',
+        role: 'client' as const,
         onboardingComplete: true,
         avatar: user.photoURL || null,
         createdAt: serverTimestamp(),
-      });
+      };
+      await setDoc(doc(db, 'users', user.uid), userProfile);
 
-      // Save project request if title is provided
+      // 2. CRITICAL — Immediately patch the Zustand store so ProtectedRoute sees
+      //    onboardingComplete=true without waiting for onAuthStateChanged to re-fire.
+      //    Without this, the store still has onboardingComplete=false and the
+      //    ProtectedRoute redirects back to /onboarding in an infinite loop.
+      if (storeUser) {
+        setUser({ ...storeUser, onboardingComplete: true });
+      }
+
+      // 3. Save project request if title is provided
+      let projectRequestId: string | null = null;
       if (data.projectTitle.trim()) {
-        await addDoc(collection(db, 'projectRequests'), {
+        const reqRef = await addDoc(collection(db, 'projectRequests'), {
           clientId: user.uid,
           clientName: data.name,
           clientEmail: user.email,
@@ -134,11 +147,35 @@ export function OnboardingPage() {
           status: 'pending',
           createdAt: new Date().toISOString(),
         });
+        projectRequestId = reqRef.id;
+
+        // 4. Notify all admin users about the new project request
+        //    Query for all users with role=admin and create a notification for each
+        try {
+          const adminQuery = query(collection(db, 'users'), where('role', '==', 'admin'));
+          const adminSnap = await getDocs(adminQuery);
+          const notifyAdmins = adminSnap.docs.map((adminDoc) =>
+            addDoc(collection(db, 'notifications'), {
+              userId: adminDoc.id,
+              title: '📋 New Project Request',
+              body: `${data.name} submitted a new project request: "${data.projectTitle}" (${data.serviceType}, ${data.budgetRange}, ${data.urgency}). Review it in Project Requests.`,
+              type: 'system',
+              projectId: projectRequestId,
+              read: false,
+              createdAt: new Date().toISOString(),
+            })
+          );
+          await Promise.all(notifyAdmins);
+        } catch (notifyErr) {
+          // Non-critical: log but don't block navigation
+          console.warn('Failed to notify admins:', notifyErr);
+        }
       }
 
-      navigate('/dashboard');
+      // 5. Navigate to dashboard — store is already patched, no redirect loop
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      console.error(err);
+      console.error('Onboarding error:', err);
     } finally {
       setLoading(false);
     }

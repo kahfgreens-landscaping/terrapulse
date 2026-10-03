@@ -30,15 +30,24 @@ const ACTIVE_STATUSES = ['in_progress', 'design', 'approval', 'scheduled', 'inqu
 export function DashboardPage() {
   const { user } = useAuth();
 
-  // Role-aware project query
+  // Role-aware project query — client and PM queries do NOT use orderBy to avoid
+  // Firestore composite index requirements. Sorting is done in-memory after loading.
   const projectQueryConstraints =
     user?.role === 'admin'
       ? [orderBy('updatedAt', 'desc'), limit(10)]
       : user?.role === 'pm'
-      ? [where('pmId', '==', user?.uid ?? ''), orderBy('updatedAt', 'desc'), limit(10)]
-      : [where('clientId', '==', user?.uid ?? ''), orderBy('updatedAt', 'desc'), limit(10)];
+      ? [where('pmId', '==', user?.uid ?? '')]
+      : [where('clientId', '==', user?.uid ?? '')];
 
-  const { data: rawProjects } = useCollection<Project>('projects', ...projectQueryConstraints);
+  const { data: rawProjectsUnsorted } = useCollection<Project>('projects', ...projectQueryConstraints);
+
+  // Sort and limit for non-admin roles in-memory (avoids composite index)
+  const rawProjects =
+    user?.role === 'admin'
+      ? rawProjectsUnsorted
+      : [...rawProjectsUnsorted]
+          .sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
+          .slice(0, 10);
 
   // Exclude soft-deleted projects
   const projects = rawProjects.filter((p) => !p.deleted);

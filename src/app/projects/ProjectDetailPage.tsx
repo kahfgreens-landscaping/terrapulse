@@ -150,13 +150,35 @@ export function ProjectDetailPage() {
   }, [messages, activeTab]);
 
   const handleStatusChange = async (newStatus: ProjectStatus) => {
-    if (!id) return;
+    if (!id || !project) return;
     setUpdating(true);
     try {
       await updateDoc(doc(db, 'projects', id), {
         status: newStatus,
         updatedAt: new Date().toISOString(),
       });
+
+      // Notify all relevant parties about the status change
+      const statusText = newStatus.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const notifyTargets: string[] = [];
+      // Admin always gets notified if someone else changed it
+      if (user?.role !== 'admin' && project.pmId) notifyTargets.push(project.pmId);
+      // Client gets notified if admin or PM changed the status
+      if (user?.role !== 'client' && project.clientId) notifyTargets.push(project.clientId);
+
+      await Promise.all(
+        notifyTargets.map((uid) =>
+          addDoc(collection(db, 'notifications'), {
+            userId: uid,
+            title: `📊 Project Status Updated`,
+            body: `"${project.title}" status changed to ${statusText} by ${user?.name ?? 'team'}.`,
+            type: 'milestone',
+            projectId: id,
+            read: false,
+            createdAt: new Date().toISOString(),
+          })
+        )
+      );
     } catch (e) {
       console.error(e);
     } finally {
@@ -168,6 +190,7 @@ export function ProjectDetailPage() {
     if (!project || !id) return;
     setUpdating(true);
     try {
+      const phase = project.phases.find((p) => p.id === phaseId);
       const updatedPhases = project.phases.map((p) =>
         p.id === phaseId ? { ...p, status: newPhaseStatus } : p
       );
@@ -175,6 +198,31 @@ export function ProjectDetailPage() {
         phases: updatedPhases,
         updatedAt: new Date().toISOString(),
       });
+
+      // Notify client when a phase is completed or when work starts on a phase
+      if (project.clientId && phase && newPhaseStatus === 'completed') {
+        await addDoc(collection(db, 'notifications'), {
+          userId: project.clientId,
+          title: `✅ Phase Complete: ${phase.name}`,
+          body: `The "${phase.name}" phase of your project "${project.title}" has been completed! Check your project timeline for details.`,
+          type: 'milestone',
+          projectId: id,
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      // Notify PM when admin marks a phase
+      if (user?.role === 'admin' && project.pmId && phase) {
+        await addDoc(collection(db, 'notifications'), {
+          userId: project.pmId,
+          title: `🔄 Phase Updated: ${phase.name}`,
+          body: `Admin updated the "${phase.name}" phase of "${project.title}" to ${newPhaseStatus.replace(/_/g, ' ')}.`,
+          type: 'milestone',
+          projectId: id,
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {

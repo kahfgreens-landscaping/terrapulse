@@ -85,7 +85,7 @@ export function ProjectRequestsPage() {
         id: `phase-${idx + 1}`,
       }));
 
-      // 1. Create real project in Firestore
+      // 1. Create real project in Firestore with all required fields
       await setDoc(projectRef, {
         id: projectRef.id,
         title: acceptingReq.projectTitle,
@@ -103,9 +103,12 @@ export function ProjectRequestsPage() {
         status: 'design',
         phases,
         address: acceptingReq.propertyAddress,
+        budget: 0, // Admin can update this via Edit Project modal
         tags: [acceptingReq.serviceType, acceptingReq.propertyType],
         startDate: new Date().toISOString(),
         estimatedEndDate: new Date(Date.now() + 45 * 86400000).toISOString(),
+        // Explicitly set deleted:false so client-side !p.deleted filter includes this project
+        deleted: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
