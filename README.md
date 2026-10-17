@@ -105,3 +105,5 @@ src/
 ## Environment Variables
 
 See `.env.example` for all required environment variables.
+
+- **Developed By:** [Qaisar](https://github.com/Kaiserabbas/)
